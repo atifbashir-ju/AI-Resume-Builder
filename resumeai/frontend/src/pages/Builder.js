@@ -16,7 +16,7 @@ const emptyData = {
 export default function Builder() {
   const [data, setData] = useState(emptyData);
   const [template, setTemplate] = useState('modern-pro');
-  const [title, setTitle] = useState('My Resume');
+  const [title] = useState('My Resume');
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('personal');
 
