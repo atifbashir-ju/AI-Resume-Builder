@@ -12,7 +12,7 @@ app = FastAPI(title="ResumeAI API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -22,12 +22,14 @@ app.include_router(auth.router)
 app.include_router(resume.router)
 app.include_router(dashboard.router)
 
-
 @app.get("/")
 def root():
     return {"message": "ResumeAI API is running 🚀"}
 
-
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+@app.get("/api/resume")
+def get_resume():
+    return {"message": "Resume API working"}
