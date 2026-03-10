@@ -1,35 +1,26 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from models.database import engine, Base
-from routers import auth, resume, dashboard
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+app = FastAPI()
 
-app = FastAPI(title="ResumeAI API", version="1.0.0")
+origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://your-project.vercel.app"
+]
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(auth.router)
-app.include_router(resume.router)
-app.include_router(dashboard.router)
-
 @app.get("/")
-def root():
-    return {"message": "ResumeAI API is running 🚀"}
+def home():
+    return {"message": "Backend running"}
 
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
-
-@app.get("/api/resume")
-def get_resume():
-    return {"message": "Resume API working"}
+@app.get("/test")
+def test():
+    return {"status": "API working"}
