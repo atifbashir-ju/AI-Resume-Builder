@@ -1,26 +1,30 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-
-origins = [
-    "https://the-ai-resume-builder-iqdu.vercel.app"
-]
-
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# model
+class User(BaseModel):
+    name: str
+    email: str
+    password: str
+
 @app.get("/")
 def home():
     return {"message": "Backend running"}
 
-@app.get("/test")
-def test():
-    return {"status": "API working"}
+@app.post("/signup")
+def signup(user: User):
+    return {
+        "message": "User created successfully",
+        "user": user
+    }
