@@ -53,3 +53,14 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+import { useEffect } from "react";
+
+const API = "https://ai-resume-builder-3-dhln.onrender.com";
+
+useEffect(() => {
+  fetch(`${API}/api/resume`)
+    .then(res => res.json())
+    .then(data => console.log(data));
+}, []);
