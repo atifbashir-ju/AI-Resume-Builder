@@ -1,46 +1,41 @@
-import React, { useState } from "react";
-import axios from "axios";
-import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+const handleSubmit = async () => {
 
-export default function Signup() {
+  if (!name || !email || !password || !confirm) {
+    toast.error("Please fill all fields");
+    return;
+  }
 
-  const [name] = useState("");
-  const [email,setEmail] = useState("");
-  const [password,setPassword] = useState("");
-  const [confirm,setConfirm] = useState("");
-  const [loading,setLoading] = useState(false);
+  if (password !== confirm) {
+    toast.error("Passwords do not match");
+    return;
+  }
 
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  if (password.length < 6) {
+    toast.error("Password must be at least 6 characters");
+    return;
+  }
 
-  const API = "https://ai-resume-builder-3-dhln.onrender.com";
+  setLoading(true);
 
-  const handleSubmit = async () => {
+  try {
 
-    if (!name || !email || !password || !confirm) {
-      toast.error("Please fill all fields");
-      return;
-    }
+    const { data } = await axios.post(
+      `${API}/api/auth/signup`,
+      { name, email, password }
+    );
 
-    try {
+    login(data.user, data.access_token);
+    toast.success("Account created!");
+    navigate("/dashboard");
 
-      const { data } = await axios.post(
-        `${API}/api/auth/signup`,
-        { name, email, password }
-      );
+  } catch (err) {
 
-      login(data.user, data.access_token);
-      navigate("/dashboard");
+    toast.error(err.response?.data?.detail || "Signup failed");
 
-    } catch (err) {
-      toast.error("Signup failed");
-    }
+  } finally {
 
-  };
+    setLoading(false);
 
-  return (
-    <button onClick={handleSubmit}>Create Account</button>
-  );
-}
+  }
+
+};
