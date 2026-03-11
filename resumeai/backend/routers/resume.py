@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -10,6 +10,7 @@ from models.database import get_db
 from models.models import User, Resume
 from routers.auth import get_current_user
 from services.pdf_service import generate_resume_pdf, generate_text_resume_pdf
+from utils.resume_parser import parse_resume
 
 router = APIRouter(prefix="/api/resume", tags=["resume"])
 
@@ -34,15 +35,9 @@ class AnalyzeRequest(BaseModel):
     job_description: Optional[str] = None
 
 
-@router.post("/analyze")
-def analyze_resume(
-    req: AnalyzeRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Analyze resume and return ATS score + suggestions."""
+def _run_analysis(resume_text: str, job_description: Optional[str]) -> dict:
     def attach_download_payload(payload: dict) -> dict:
-        pdf_bytes = generate_text_resume_pdf(payload.get("optimized_text") or req.resume_text or "")
+        pdf_bytes = generate_text_resume_pdf(payload.get("optimized_text") or resume_text or "")
         payload["download_pdf"] = base64.b64encode(pdf_bytes).decode("utf-8")
         payload["download_filename"] = "resumeai-analysis.pdf"
         payload["download_message"] = "You can use this ready resume or download it for quick sharing."
@@ -50,11 +45,10 @@ def analyze_resume(
 
     try:
         from services.ai_service import analyze_with_ai
-        result = analyze_with_ai(req.resume_text, req.job_description)
+        result = analyze_with_ai(resume_text, job_description)
         return attach_download_payload(result)
-    except Exception as e:
-        # Fallback analysis
-        text = req.resume_text.lower()
+    except Exception:
+        text = (resume_text or "").lower()
         score = 60
         keywords_found = []
         missing = []
@@ -78,9 +72,37 @@ def analyze_resume(
                 "Keep resume to 1-2 pages"
             ],
             "strengths": ["Resume parsed successfully"],
-            "optimized_text": req.resume_text
+            "optimized_text": resume_text
         }
         return attach_download_payload(fallback)
+
+
+@router.post("/analyze")
+def analyze_resume(
+    req: AnalyzeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Analyze resume and return ATS score + suggestions."""
+    return _run_analysis(req.resume_text, req.job_description)
+
+
+@router.post("/analyze/upload")
+async def analyze_resume_upload(
+    job_description: Optional[str] = Form(None),
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    extracted_text = parse_resume(data, file.filename or "resume.txt")
+    analysis = _run_analysis(extracted_text, job_description)
+    analysis["extracted_text"] = extracted_text
+    analysis["original_filename"] = file.filename
+    return analysis
 
 
 @router.post("/build")

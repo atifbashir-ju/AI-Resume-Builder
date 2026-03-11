@@ -10,17 +10,47 @@ export default function Analyzer() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  const analyzeFile = async (file) => {
+    setLoading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      if (jobDesc.trim()) form.append('job_description', jobDesc);
+      const { data } = await axios.post('/api/resume/analyze/upload', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (data.extracted_text) setResumeText(data.extracted_text);
+      setResult(data);
+      toast.success('PDF analyzed successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Could not analyze file');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'text/plain': ['.txt'], 'application/pdf': ['.pdf'] },
+    accept: {
+      'text/plain': ['.txt'],
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+    },
     onDrop: async (files) => {
       const file = files[0];
-      if (file.type === 'text/plain') {
+      if (!file) return;
+      const name = file.name?.toLowerCase() || '';
+      if (file.type === 'text/plain' || name.endsWith('.txt')) {
         const text = await file.text();
         setResumeText(text);
         toast.success('File loaded!');
-      } else {
-        toast('PDF text extraction coming soon — please paste text below', { icon: '📄' });
+        return;
       }
+      if (name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.docx')) {
+        await analyzeFile(file);
+        return;
+      }
+      toast.error('Unsupported file format');
     }
   });
 
@@ -68,7 +98,7 @@ export default function Analyzer() {
         <input {...getInputProps()} />
         <div style={{ fontSize: 40, marginBottom: 10 }}>📄</div>
         <p style={{ color: '#888899', fontSize: 15 }}>{isDragActive ? 'Drop it here!' : 'Drag & drop your resume, or click to browse'}</p>
-        <p style={{ color: '#555566', fontSize: 13, marginTop: 4 }}>Supports .txt files (PDF coming soon)</p>
+        <p style={{ color: '#555566', fontSize: 13, marginTop: 4 }}>Supports .txt, .pdf, .docx — PDF uploads auto-analyze</p>
       </div>
 
       <div style={{ marginBottom: 20 }}>
