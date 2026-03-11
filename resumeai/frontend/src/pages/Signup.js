@@ -1,8 +1,8 @@
 import { useState } from "react";
+import { signupUser } from "../api";
 
 
 
-import { signupUser } from "./api";
 function Signup() {
 
   const [name,setName] = useState("");
