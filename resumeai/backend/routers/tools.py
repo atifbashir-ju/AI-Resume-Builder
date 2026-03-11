@@ -6,6 +6,7 @@ import os
 import random
 import string
 
+from config import settings
 from models.database import get_db
 from models.models import User
 from routers.auth import get_current_user
@@ -176,8 +177,7 @@ def get_my_referrals(
     # Generate referral code if user doesn't have one
     # (In production, store this in the User model)
     referral_code = generate_referral_code(current_user.name, current_user.id)
-    base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    referral_link = f"{base_url}/signup?ref={referral_code}"
+    referral_link = f"{settings.frontend_url}/signup?ref={referral_code}"
     
     return {
         "referral_code": referral_code,
@@ -199,8 +199,7 @@ def send_invite(
     # In production: send actual email via SendGrid/SES
     # For now just return success
     referral_code = generate_referral_code(current_user.name, current_user.id)
-    base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    referral_link = f"{base_url}/signup?ref={referral_code}"
+    referral_link = f"{settings.frontend_url}/signup?ref={referral_code}"
     
     print(f"[INVITE] {current_user.email} invited {req.email} with code {referral_code}")
     # TODO: Integrate email service (SendGrid, AWS SES, etc.)

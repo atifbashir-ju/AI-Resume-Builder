@@ -10,8 +10,10 @@ AI-Powered Resume Builder & Analyzer
 3. Build: `pip install -r requirements.txt`
 4. Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 5. Environment Variables:
-   - `SECRET_KEY` = `ResumeAI2024SecretKeyXyZ789abcDEF456ghi`
-   - `FRONTEND_URL` = your Vercel URL
+   - `SECRET_KEY` = generate a unique 32+ char value (e.g. `openssl rand -hex 32`)
+   - `FRONTEND_URL` = your deployed Vercel URL
+   - `DATABASE_URL` = the Render Postgres connection string
+   - `CORS_ORIGINS` = comma-separated frontend origins (e.g. `https://yourapp.vercel.app`)
    - `PYTHON_VERSION` = `3.11.8`
 
 ### Frontend (Vercel)
