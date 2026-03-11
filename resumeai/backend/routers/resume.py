@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
 import io
+import base64
 
 from models.database import get_db
 from models.models import User, Resume
 from routers.auth import get_current_user
+from services.pdf_service import generate_resume_pdf, generate_text_resume_pdf
 
 router = APIRouter(prefix="/api/resume", tags=["resume"])
 
@@ -39,10 +41,17 @@ def analyze_resume(
     db: Session = Depends(get_db)
 ):
     """Analyze resume and return ATS score + suggestions."""
+    def attach_download_payload(payload: dict) -> dict:
+        pdf_bytes = generate_text_resume_pdf(payload.get("optimized_text") or req.resume_text or "")
+        payload["download_pdf"] = base64.b64encode(pdf_bytes).decode("utf-8")
+        payload["download_filename"] = "resumeai-analysis.pdf"
+        payload["download_message"] = "You can use this ready resume or download it for quick sharing."
+        return payload
+
     try:
         from services.ai_service import analyze_with_ai
         result = analyze_with_ai(req.resume_text, req.job_description)
-        return result
+        return attach_download_payload(result)
     except Exception as e:
         # Fallback analysis
         text = req.resume_text.lower()
@@ -58,7 +67,7 @@ def analyze_resume(
             else:
                 missing.append(kw)
 
-        return {
+        fallback = {
             "ats_score": min(score, 95),
             "keywords_found": keywords_found[:10],
             "missing_keywords": missing[:5],
@@ -71,6 +80,7 @@ def analyze_resume(
             "strengths": ["Resume parsed successfully"],
             "optimized_text": req.resume_text
         }
+        return attach_download_payload(fallback)
 
 
 @router.post("/build")

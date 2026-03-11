@@ -8,6 +8,7 @@ export default function Analyzer() {
   const [jobDesc, setJobDesc] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'text/plain': ['.txt'], 'application/pdf': ['.pdf'] },
@@ -36,6 +37,27 @@ export default function Analyzer() {
   };
 
   const scoreColor = (score) => score >= 80 ? '#00b894' : score >= 60 ? '#f39c12' : '#e74c3c';
+
+  const downloadAnalyzedPdf = () => {
+    if (!result?.download_pdf) {
+      toast.error('Download not ready yet');
+      return;
+    }
+    try {
+      setDownloading(true);
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${result.download_pdf}`;
+      link.download = result.download_filename || 'resumeai-analysis.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Resume downloaded');
+    } catch {
+      toast.error('Failed to download resume');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
@@ -93,6 +115,16 @@ export default function Analyzer() {
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 14 }}>💡 Suggestions</h3>
             {result.suggestions?.map((s, i) => <p key={i} style={{ color: '#888899', fontSize: 14, marginBottom: 8, paddingLeft: 16 }}>• {s}</p>)}
           </div>
+
+          {result.download_pdf && (
+            <div style={{ marginTop: 24, background: '#111118', border: '1px solid #1e1e2e', borderRadius: 14, padding: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: '#00b894' }}>Use This Resume 🚀</h3>
+              <p style={{ color: '#888899', fontSize: 14 }}>{result.download_message || 'You can download the analyzed resume instantly and use it anywhere.'}</p>
+              <button onClick={downloadAnalyzedPdf} disabled={downloading} style={{ alignSelf: 'flex-start', padding: '10px 22px', background: downloading ? '#333' : 'linear-gradient(135deg,#00b894,#00cec9)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 600, cursor: downloading ? 'not-allowed' : 'pointer' }}>
+                {downloading ? 'Preparing...' : 'Download Resume PDF'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

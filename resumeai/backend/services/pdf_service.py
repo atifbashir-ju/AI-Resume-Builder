@@ -4,6 +4,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
 from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.styles import getSampleStyleSheet
 import io
 
 TEMPLATES = {
@@ -47,19 +48,22 @@ def generate_resume_pdf(resume_data: dict, template: str = "modern-pro") -> byte
     if personal.get("phone"): contact_parts.append(personal["phone"])
     if personal.get("location"): contact_parts.append(personal["location"])
 
-    links = []
+    linkedin_link = None
+    website_link = None
     if personal.get("linkedin"):
-        ln = personal["linkedin"].replace("https://", "").replace("http://", "").rstrip("/")
-        links.append(ln)
+        linkedin_link = personal["linkedin"].strip()
     if personal.get("website"):
-        wb = personal["website"].replace("https://", "").replace("http://", "").rstrip("/")
-        links.append(wb)
+        website_link = personal["website"].strip()
 
     if contact_parts:
-        story.append(Paragraph(" · ".join(contact_parts), contact_style))
-    if links:
-        story.append(Paragraph(" · ".join(links), contact_style))
-
+        story.append(Paragraph(" | ".join(contact_parts), contact_style))
+    if linkedin_link or website_link:
+        link_parts = []
+        if linkedin_link:
+            link_parts.append(f"LinkedIn: {linkedin_link}")
+        if website_link:
+            link_parts.append(f"Portfolio: {website_link}")
+        story.append(Paragraph(" | ".join(link_parts), contact_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=p_color, spaceAfter=6, spaceBefore=2))
 
     def add_section(title):
@@ -77,16 +81,16 @@ def generate_resume_pdf(resume_data: dict, template: str = "modern-pro") -> byte
         add_section("Work Experience")
         for exp in valid_exp:
             end = "Present" if exp.get("current") else exp.get("end_date", "")
-            date_str = f"{exp.get('start_date', '')} – {end}".strip(" –")
+            date_str = f"{exp.get('start_date', '')} - {end}".strip(" -")
             row = [[Paragraph(exp.get("role", ""), bold_style), Paragraph(exp.get("company", ""), italic_style), Paragraph(date_str, italic_style)]]
             t = Table(row, colWidths=[2.4*inch, 2.4*inch, 1.8*inch])
             t.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('ALIGN',(2,0),(2,0),'RIGHT'),('TOPPADDING',(0,0),(-1,-1),0),('BOTTOMPADDING',(0,0),(-1,-1),0)]))
             story.append(t)
             if exp.get("description"):
                 for line in exp["description"].split('\n'):
-                    line = line.strip().lstrip('•-– ').strip()
+                    line = line.strip().lstrip('-').strip()
                     if line:
-                        story.append(Paragraph(f"• {line}", bullet_style))
+                        story.append(Paragraph(f"- {line}", bullet_style))
             story.append(Spacer(1, 5))
 
     education = resume_data.get("education", [])
@@ -96,7 +100,7 @@ def generate_resume_pdf(resume_data: dict, template: str = "modern-pro") -> byte
         for edu in valid_edu:
             degree_line = edu.get("degree", "")
             if edu.get("field"): degree_line += f" in {edu['field']}"
-            date_str = f"{edu.get('start_year', '')} – {edu.get('end_year', '')}".strip(" –")
+            date_str = f"{edu.get('start_year', '')} - {edu.get('end_year', '')}".strip(" -")
             row = [[Paragraph(edu.get("institution", ""), bold_style), Paragraph(degree_line, italic_style), Paragraph(date_str, italic_style)]]
             t = Table(row, colWidths=[2.4*inch, 2.4*inch, 1.8*inch])
             t.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('ALIGN',(2,0),(2,0),'RIGHT'),('TOPPADDING',(0,0),(-1,-1),0),('BOTTOMPADDING',(0,0),(-1,-1),0)]))
@@ -131,7 +135,45 @@ def generate_resume_pdf(resume_data: dict, template: str = "modern-pro") -> byte
             parts = [cert["name"]]
             if cert.get("issuer"): parts.append(cert["issuer"])
             if cert.get("year"): parts.append(cert["year"])
-            story.append(Paragraph(f"• {' — '.join(parts)}", bullet_style))
+            story.append(Paragraph(f"- {' - '.join(parts)}", bullet_style))
+
+    doc.build(story)
+    return buffer.getvalue()
+
+
+def generate_text_resume_pdf(resume_text: str, title: str = "ResumeAI Analyzer") -> bytes:
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=0.65 * inch,
+        leftMargin=0.65 * inch,
+        topMargin=0.75 * inch,
+        bottomMargin=0.75 * inch,
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "AnalyzerTitle",
+        fontSize=18,
+        fontName="Helvetica-Bold",
+        textColor=colors.HexColor("#1a1a2e"),
+        spaceAfter=12,
+    )
+    body_style = ParagraphStyle(
+        "AnalyzerBody",
+        fontSize=11,
+        textColor=colors.HexColor("#2d2d2d"),
+        leading=16,
+        spaceAfter=6,
+    )
+
+    story = [Paragraph(title, title_style), HRFlowable(width="100%", thickness=1, color=colors.HexColor("#00b894"), spaceAfter=10)]
+
+    text = resume_text or "Resume content not provided."
+    for line in text.splitlines():
+        clean_line = line.strip() or "&nbsp;"
+        story.append(Paragraph(clean_line, body_style))
 
     doc.build(story)
     return buffer.getvalue()
