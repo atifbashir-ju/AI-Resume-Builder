@@ -42,6 +42,7 @@ def generate_resume_pdf(resume_data: dict, template: str = "modern-pro") -> byte
     bullet_style = ParagraphStyle("Bullet", fontSize=9.5, textColor=colors.HexColor("#2d2d2d"), spaceAfter=2, leading=14, leftIndent=10)
 
     story.append(Paragraph(personal.get("name", "Your Name"), name_style))
+    story.append(Spacer(1, 4))
 
     contact_parts = []
     if personal.get("email"): contact_parts.append(personal["email"])

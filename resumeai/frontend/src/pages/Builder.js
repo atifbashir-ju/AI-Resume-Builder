@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { premiumTemplates } from '../templates/premiumTemplates';
 
 const TEMPLATES = ['modern-pro','executive','creative-bold','minimal-clean','tech-dark','academic','startup','elegant'];
 
@@ -19,6 +20,7 @@ export default function Builder() {
   const [title] = useState('My Resume');
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('personal');
+  const [isPremiumUser] = useState(false);
 
   const update = (section, field, value, idx) => {
     setData(prev => {
@@ -138,6 +140,36 @@ export default function Builder() {
             {inp(cert.year, v => update('certifications','year',v,i), 'Year')}
           </div>
         ))}
+      </div>
+
+      <div style={{ marginTop:32 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, flexWrap:'wrap', gap:8 }}>
+          <h3 style={{ fontFamily:'Space Grotesk,sans-serif', fontSize:22, fontWeight:700 }}>Premium Templates</h3>
+          {!isPremiumUser && <p style={{ color:'#facc15', fontSize:13 }}>Upgrade to apply these exclusive layouts</p>}
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))', gap:16 }}>
+          {premiumTemplates.map(tpl => (
+            <div key={tpl.id} style={{ border:'1px solid #1e1e2e', borderRadius:12, padding:20, background:'#111118', position:'relative' }}>
+              <span style={{ position:'absolute', top:14, right:14, fontSize:12, background:'rgba(250,204,21,0.15)', color:'#facc15', padding:'2px 8px', borderRadius:999 }}>{tpl.badge}</span>
+              <div style={{ width:'100%', height:6, borderRadius:999, background:tpl.previewColor, marginBottom:14 }} />
+              <h4 style={{ fontSize:18, fontWeight:600, marginBottom:6 }}>{tpl.name}</h4>
+              <p style={{ color:'#888899', fontSize:13, minHeight:48 }}>{tpl.description}</p>
+              <button
+                onClick={() => {
+                  if (!isPremiumUser) {
+                    toast.error('Premium access required. Contact Atif to upgrade!');
+                    return;
+                  }
+                  setTemplate(tpl.id);
+                  toast.success(`${tpl.name} applied`);
+                }}
+                style={{ marginTop:12, width:'100%', padding:'10px 0', border:'1px solid #1e1e2e', borderRadius:8, background:isPremiumUser ? '#00b894' : 'transparent', color:isPremiumUser ? '#0a0a0f' : '#888899', fontWeight:600, cursor:'pointer' }}
+              >
+                {isPremiumUser ? 'Apply Template' : 'Unlock with Premium'}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
