@@ -2,6 +2,39 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Landing() {
+  const plans = [
+    {
+      tier: 'Free Plan',
+      price: '₹0',
+      period: '',
+      subtitle: 'Perfect to try ResumeAI',
+      badge: 'Free Forever',
+      features: [
+        '1 resume slot',
+        'Access to the basic template',
+        'Instant PDF export'
+      ],
+      cta: 'Continue Free →',
+      highlight: false
+    },
+    {
+      tier: 'Premium',
+      price: '₹99',
+      period: '/month',
+      subtitle: 'Unlock the AI copilot for your job search',
+      badge: 'Most Popular',
+      features: [
+        'ATS score checker',
+        'AI resume improvement',
+        'Job description analyzer',
+        'AI cover letter generator',
+        'AI mock interview coach'
+      ],
+      cta: 'Upgrade to Premium →',
+      highlight: true
+    }
+  ];
+
   return (
     <div style={{ background: '#0a0a0f', minHeight: '100vh', color: '#e8e8f0' }}>
       {/* Hero */}
@@ -37,6 +70,67 @@ export default function Landing() {
               <div style={{ fontSize: 32, marginBottom: 14 }}>{icon}</div>
               <h3 style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 18, fontWeight: 600, marginBottom: 10 }}>{title}</h3>
               <p style={{ color: '#888899', fontSize: 14, lineHeight: 1.6 }}>{desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px 80px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <p style={{ color: '#00b894', fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Pricing</p>
+          <h2 style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 34, fontWeight: 700, marginBottom: 12 }}>Choose your plan</h2>
+          <p style={{ color: '#888899', maxWidth: 520, margin: '0 auto', lineHeight: 1.6 }}>
+            Start for free with a single resume or unlock the full Premium suite for just ₹99/month.
+          </p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
+          {plans.map(plan => (
+            <div
+              key={plan.tier}
+              style={{
+                background: '#16161e',
+                border: plan.highlight ? '1px solid rgba(0,184,148,0.5)' : '1px solid #1e1e2e',
+                borderRadius: 16,
+                padding: 28,
+                position: 'relative',
+                boxShadow: plan.highlight ? '0 10px 35px rgba(0,184,148,0.15)' : 'none'
+              }}
+            >
+              {plan.badge && (
+                <div style={{ position: 'absolute', top: 18, right: 18, fontSize: 12, fontWeight: 600, color: plan.highlight ? '#00b894' : '#888899', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  {plan.badge}
+                </div>
+              )}
+              <h3 style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 22, fontWeight: 700, marginBottom: 6 }}>{plan.tier}</h3>
+              <p style={{ color: '#888899', marginBottom: 20 }}>{plan.subtitle}</p>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 24 }}>
+                <span style={{ fontSize: 42, fontWeight: 700, color: '#e8e8f0' }}>{plan.price}</span>
+                {plan.period && <span style={{ color: '#888899', fontSize: 16 }}>{plan.period}</span>}
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {plan.features.map(feature => (
+                  <li key={feature} style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#e8e8f0', fontSize: 14 }}>
+                    <span style={{ display: 'inline-flex', width: 24, height: 24, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: plan.highlight ? 'rgba(0,184,148,0.15)' : 'rgba(255,255,255,0.05)', color: plan.highlight ? '#00b894' : '#888899' }}>✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <button
+                style={{
+                  width: '100%',
+                  padding: '12px 0',
+                  borderRadius: 10,
+                  border: plan.highlight ? 'none' : '1px solid #2a2a3b',
+                  background: plan.highlight ? 'linear-gradient(135deg,#00b894,#00cec9)' : 'transparent',
+                  color: plan.highlight ? '#0b0b12' : '#e8e8f0',
+                  fontSize: 15,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {plan.cta}
+              </button>
             </div>
           ))}
         </div>
